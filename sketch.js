@@ -1,6 +1,6 @@
 let [gridW, gridH, gridS] = [80, 80, 10];
 let grid, ant;
-let slider;
+let slider1;
 let speed = 20;
 let steps = 0;
 let dir = -gridW;
@@ -11,9 +11,9 @@ function setup() {
     frameRate(speed);
     grid = Array(gridW * gridH).fill(1);
     ant = Math.round(gridH / 2) * gridW + Math.round(gridW / 2) - 1;
-    slider = createSlider(5, 100, 20);
-    slider.position(gridW * gridS + 30, 200);
-    slider.style("width", "250px");
+    slider1 = createSlider(5, 100, 20);
+    slider1.position(gridW * gridS + 30, 200);
+    slider1.style("width", "250px");
 }
 
 function moveAnt() {
@@ -33,8 +33,9 @@ function moveAnt() {
 
 function draw() {
     background("#ebebeb");
-    if (speed !== slider.value()) {
-        speed = Math.round(slider.value());
+    stroke(0);
+    if (speed !== slider1.value()) {
+        speed = Math.round(slider1.value());
         if (speed > 50) frameRate(50);
         else frameRate(speed);
     }
@@ -53,6 +54,7 @@ function draw() {
     fill(0);
     textSize(40);
     textStyle(BOLD);
+    noStroke();
     text("Langton's Ant", gridW * gridS + 15, 50);
     textSize(30);
     text(`Steps: ${steps}`, gridW * gridS + 15, 100);
@@ -62,6 +64,36 @@ function draw() {
     textSize(25);
     text("Click to Change Ant Pos", gridW * gridS + 15, 295);
     text("Drag to Remove Filled Blocks", gridW * gridS + 15, 335);
+
+    if (settings[1]) {
+        //Drag to Remove Filled Blocks (Event 1)
+        if (mouseX > 0 && mouseX < gridW * gridS && mouseY > 0 && mouseY < gridH * gridS) {
+            let r = 1;
+            let scope = 2 * r + 1;
+            if (mouseIsPressed) {
+                let index = Math.floor(mouseY / gridS) * gridW + Math.floor(mouseX / gridS);
+                let centerY = Math.floor(index / gridW);
+                let centerX = index - centerY * gridW;
+                let blocks = [];
+                for (let i = 0; i < scope; i++) {
+                    for (let j = 0; j < scope; j++) blocks.push((i - r) * gridW + j - r);
+                }
+                for (let i = 0; i < blocks.length; i++) {
+                    let pos = index + blocks[i];
+                    let y = Math.floor(pos / gridW);
+                    let x = pos - y * gridW;
+                    let xinc = x === centerX ? 0.5 : (x > centerX ? 0.3 : 0.7);
+                    let yinc = y === centerY ? 0.5 : (y > centerY ? 0.3 : 0.7);
+                    if (dist((x + xinc) * gridS, (y + yinc) * gridS, mouseX, mouseY) <= r * gridS) {
+                        if (grid[pos] === 0) grid[pos] = 1;
+                    }
+                }
+            }
+            noFill();
+            stroke(0);
+            ellipse(mouseX, mouseY, 2 * r * gridS, 2 * r * gridS);
+        }
+    }
 }
 
 function toggleSandbox(id) {
@@ -71,24 +103,11 @@ function toggleSandbox(id) {
 
 function mousePressed() {
     if (settings[0]) {
-        //Click to Change Ant Position
+        //Click to Change Ant Position (Event 0)
         if (mouseX > 0 && mouseX < gridW * gridS && mouseY > 0 && mouseY < gridH * gridS) {
             let x = Math.floor(mouseX / gridS);
             let y = Math.floor(mouseY / gridS);
             ant = y * gridW + x;
-        }
-    }
-}
-
-function mouseDragged() {
-    if (settings[1]) {
-        //Drag to Remove Filled Blocks
-        //make area of impact larger
-        if (mouseX > 0 && mouseX < gridW * gridS && mouseY > 0 && mouseY < gridH * gridS) {
-            let x = Math.floor(mouseX / gridS);
-            let y = Math.floor(mouseY / gridS);
-            let index = y * gridW + x;
-            if (grid[index] === 0) grid[index] = 1;
         }
     }
 }
