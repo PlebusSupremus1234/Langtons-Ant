@@ -1,34 +1,21 @@
 let [gridW, gridH, gridS] = [80, 80, 10];
-let grid, ant;
+let grid;
+let ants = [];
 let slider1;
 let speed = 20;
 let steps = 0;
-let dir = -gridW;
 let directions = [-gridW, 1, gridW, -1];
 let settings = {};
+let settingstxt = ["Click to Change Ant Pos", "Drag to Erase Filled Blocks", "Click to Add Another Ant", "Click to Remove An Ant"];
+let textSpacing = 40;
 function setup() {
     createCanvas(gridW * gridS + 450, gridH * gridS);
     frameRate(speed);
     grid = Array(gridW * gridH).fill(1);
-    ant = Math.round(gridH / 2) * gridW + Math.round(gridW / 2) - 1;
+    ants.push(new Ant(Math.round(gridH / 2) * gridW + Math.round(gridW / 2) - 1));
     slider1 = createSlider(5, 100, 20);
     slider1.position(gridW * gridS + 30, 200);
     slider1.style("width", "250px");
-}
-
-function moveAnt() {
-    grid[ant] = grid[ant] === 1 ? 0 : 1;
-    if (grid[ant] === 0) {
-        //white square
-        dir = directions[directions.indexOf(dir) + 1];
-        if (!dir) dir = directions[0];
-    } else {
-        //black square
-        dir = directions[directions.indexOf(dir) - 1];
-        if (!dir) dir = directions[3];
-    }
-    ant += dir;
-    steps++;
 }
 
 function draw() {
@@ -42,14 +29,16 @@ function draw() {
     for (let i = 0; i < gridH; i++) {
         for (let j = 0; j < gridW; j++) {
             let index = i * gridW + j;
-            if (ant === index) fill("red");
+            if (ants.map(a => a.pos).includes(index)) fill("red");
             else if (grid[index] === 1) fill(255);
             else fill(0);
             rect(j * gridS, i * gridS, gridS, gridS);
         }
     }
 
-    for (let i = 0; i < Math.floor(speed / 50) + 1; i++) moveAnt();
+    for (let i = 0; i < Math.floor(speed / 50) + 1; i++) {
+        for (let j of ants) j.move();
+    }
 
     fill(0);
     textSize(40);
@@ -62,11 +51,10 @@ function draw() {
     text("Speed:", gridW * gridS + 15, 180);
     text("Sandbox Settings:", gridW * gridS + 15, 260)
     textSize(25);
-    text("Click to Change Ant Pos", gridW * gridS + 15, 295);
-    text("Drag to Remove Filled Blocks", gridW * gridS + 15, 335);
+    for (let i = 0; i < settingstxt.length; i++) text(settingstxt[i], gridW * gridS + 15, 295 + i * textSpacing);
 
     if (settings[1]) {
-        //Drag to Remove Filled Blocks (Event 1)
+        //Drag to Erase Filled Blocks (Event 1)
         if (mouseX > 0 && mouseX < gridW * gridS && mouseY > 0 && mouseY < gridH * gridS) {
             let r = 1;
             let scope = 2 * r + 1;
@@ -102,12 +90,29 @@ function toggleSandbox(id) {
 }
 
 function mousePressed() {
-    if (settings[0]) {
-        //Click to Change Ant Position (Event 0)
-        if (mouseX > 0 && mouseX < gridW * gridS && mouseY > 0 && mouseY < gridH * gridS) {
+    if (mouseX > 0 && mouseX < gridW * gridS && mouseY > 0 && mouseY < gridH * gridS) {
+        if (settings[0]) {
+            //Click to Change Ant Position (Event 0)
             let x = Math.floor(mouseX / gridS);
             let y = Math.floor(mouseY / gridS);
-            ant = y * gridW + x;
+            let dists = ants.map(i => i.pos).map(i => dist(x, y, i - gridW * Math.floor(i / gridW), Math.floor(i / gridW)));
+            if (ants[dists.indexOf(Math.min(...dists))]) ants[dists.indexOf(Math.min(...dists))].pos = y * gridW + x;
+        }
+
+        if (settings[2]) {
+            //Click to Add Another Ant (Event 2)
+            let x = Math.floor(mouseX / gridS);
+            let y = Math.floor(mouseY / gridS);
+            ants.push(new Ant(y * gridW + x));
+        }
+
+        if (settings[3]) {lemon
+            //Click to Remove An Ant (Event 3)
+            let x = Math.floor(mouseX / gridS);
+            let y = Math.floor(mouseY / gridS);
+            let dists = ants.map(i => i.pos).map(i => dist(x, y, i - gridW * Math.floor(i / gridW), Math.floor(i / gridW)));
+            let closest = Math.min(...dists);
+            if (closest < 5) ants.splice(dists.indexOf(closest), 1);
         }
     }
 }
