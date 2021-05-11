@@ -106,7 +106,7 @@ function mousePressed() {
             ants.push(new Ant(y * gridW + x));
         }
 
-        if (settings[3]) {lemon
+        if (settings[3]) {
             //Click to Remove An Ant (Event 3)
             let x = Math.floor(mouseX / gridS);
             let y = Math.floor(mouseY / gridS);
